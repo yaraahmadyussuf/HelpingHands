@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Help Request</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/requests.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <h1>Edit Help Request</h1>
+
+    <form>
+
+        <label for="title">Title:</label>
+        <br>
+        <input
+            type="text"
+            id="title"
+            name="title"
+            value="Help with University Fees"
+        >
+
+        <br><br>
+
+        <label for="description">Description:</label>
+        <br>
+
+        <textarea
+            id="description"
+            name="description"
+            rows="6"
+        >I need help paying my university tuition.</textarea>
+
+        <br><br>
+
+        <label for="category">Category:</label>
+        <br>
+
+        <select id="category" name="category">
+
+            <option value="Education" selected>Education</option>
+            <option value="Medical">Medical</option>
+            <option value="Food">Food</option>
+            <option value="Housing">Housing</option>
+            <option value="Other">Other</option>
+
+        </select>
+
+        <br><br>
+
+        <label for="amount_needed">Amount Needed:</label>
+        <br>
+
+        <input
+            type="number"
+            id="amount_needed"
+            name="amount_needed"
+            value="10000"
+            min="0"
+            step="0.01"
+        >
+
+        <br><br>
+
+        <button type="submit">Save Changes</button>
+
+    </form>
+
+</body>
+</html>
