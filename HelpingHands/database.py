@@ -282,6 +282,8 @@ def search_requests(keyword: str, status: str | None = "approved"):
 
 
 
+#################### helper code need to understand ####################
+
 def update_request(request_id: int, user_id: int, **fields: Any):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -314,6 +316,7 @@ def update_request(request_id: int, user_id: int, **fields: Any):
     finally:
         conn.close()
 
+###################################################################################
 
 def delete_request(request_id: int, user_id: int):
     conn = get_db_connection()
@@ -346,6 +349,97 @@ def update_request_status(request_id: int, status: str):
     finally:
         conn.close()
 
+#support functions
+def has_donor_supported(request_id: int, donor_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT 1 FROM supports WHERE request_id = ? AND donor_id = ?", (request_id, donor_id))
+        support=cursor.fetchone()
+        return support is not None
+    finally:
+        conn.close()
 
 
+def create_support(request_id: int, donor_id: int, message: str):
+    if has_donor_supported(request_id, donor_id):
+        return None
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    created_at = current_time()
 
+    try:
+        query = "INSERT INTO supports (request_id, donor_id, message, created_at) VALUES (?, ?, ?, ?)"
+        cursor.execute(query, (request_id, donor_id, message, created_at))
+        support_id=cursor.lastrowid
+        conn.commit()
+        return support_id
+    finally:
+        conn.close()
+
+def get_supports_for_request(request_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        query="""
+        SELECT 
+            s.id, s.request_id, s.donor_id, s.message, s.created_at,
+            u.name AS donor_name, u.email AS donor_email
+        FROM supports s
+        JOIN users u ON s.donor_id = u.id
+        WHERE s.request_id = ?
+        ORDER BY s.created_at DESC
+        """
+        cursor.execute(query, (request_id,))
+        donor = cursor.fetchall()
+        return [dict(row) for row in donor]
+    finally:
+        conn.close()
+
+
+def get_supports_by_donor(donor_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        query = """
+        SELECT 
+            s.id, s.request_id, s.donor_id, s.message, s.created_at,
+            r.title AS request_title, r.status AS request_status
+        FROM supports s
+        JOIN requests r ON s.request_id = r.id
+        WHERE s.donor_id = ?
+        ORDER BY s.created_at DESC
+        """
+        cursor.execute(query, (donor_id,))
+        supported = cursor.fetchall()
+        return [dict(row) for row in supported]
+    finally:
+        conn.close()
+
+#admin functions
+def get_admin_stats():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        total_users = cursor.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+        total_requests = cursor.execute("SELECT COUNT(*) FROM requests").fetchone()[0]
+        pending_requests = cursor.execute("SELECT COUNT(*) FROM requests WHERE status = 'pending'").fetchone()[0]
+        approved_requests = cursor.execute("SELECT COUNT(*) FROM requests WHERE status = 'approved'").fetchone()[0]
+        rejected_requests = cursor.execute("SELECT COUNT(*) FROM requests WHERE status = 'rejected'").fetchone()[0]
+
+
+        return {
+            "total_users": total_users,
+            "total_requests": total_requests,
+            "pending_requests": pending_requests,
+            "approved_requests": approved_requests,
+            "rejected_requests": rejected_requests
+        }
+    finally:
+        conn.close()
+
+#get_all_users() & update_request_status() --> also for admin
