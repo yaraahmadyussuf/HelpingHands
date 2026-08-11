@@ -2,9 +2,16 @@
 <html>
 <head>
     <title>Request Details</title>
+<!-- connect the HTML to the CSS file-->
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/requests.css') }}"
+    >
+
 </head>
 
 <body>
+<!-- title of the help request-->
 
     <h1>Help with University Fees</h1>
 
@@ -25,12 +32,13 @@
     </p>
 
     <p>
+        <!-- current status of the request-->
         <strong>Status:</strong>
         Pending
     </p>
 
     <hr>
-
+<!-- button that allows the dononr to offer help-->
     <button>I Want to Help</button>
 
 </body>

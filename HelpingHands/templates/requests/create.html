@@ -3,7 +3,9 @@
 <head>
     <title>Create Help Request</title>
 
-    <link 
+    <!-- connect this HTML file to the CSS file -->
+
+    <link    
         rel="stylesheet" 
         href="{{ url_for('static', filename='css/requests.css') }}"
     >
@@ -11,20 +13,26 @@
 </head>
 
 <body>
-
+                                     <!-- Page Title -->
     <h1>Create a Help Request</h1>
 
+<!-- Form where the user enter his information for the help request -->
+
     <form>
+<!-- input for the request title -->
 
         <label for="title">Title:</label>
         <br>
+       
         <input type="text" id="title" name="title">
         <br><br>
+<!--  text area for the detailed description -->
 
         <label for="description">Description:</label>
         <br>
         <textarea id="description" name="description" rows="6"></textarea>
         <br><br>
+<!-- dropdown menu for the category -->
 
         <label for="category">Category:</label>
         <br>
@@ -40,6 +48,7 @@
         </select>
 
         <br><br>
+<!-- input for the amount of money needed -->
 
         <label for="amount_needed">Amount Needed:</label>
         <br>
@@ -52,6 +61,7 @@
         >
 
         <br><br>
+<!-- submit button for submitting the data -->
 
         <button type="submit">Submit Request</button>
 
