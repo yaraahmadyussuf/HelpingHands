@@ -443,3 +443,75 @@ def get_admin_stats():
         conn.close()
 
 #get_all_users() & update_request_status() --> also for admin
+
+
+
+#HELPING FUNCTION TO TEST THE HOLE DATABASE --> PROVIDED FAKE USERS FOR TESTING
+# ONLY ME # -- > python -c "import database; database.seed_demo_data()"
+# python -c "import database; print('Users:', len(database.get_all_users())); print('Requests:', len(database.get_all_requests(status='all')))"
+def seed_demo_data():
+    """
+    Populates the database with realistic demo data for presentation purposes.
+    Cleans up existing data first and inserts users, requests, and supports.
+    """
+    tables_db()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # 1. Wipe all tables clean in dependency order
+        cursor.execute("DELETE FROM supports")
+        cursor.execute("DELETE FROM requests")
+        cursor.execute("DELETE FROM users")
+
+        # 2. Create demo users (requester, donor, admin)
+        # Note: Using 'password123' as dummy hashed password for demo accounts
+        demo_password_hash = "password123"
+
+        cursor.execute(
+            "INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)",
+            ("Sarah Ahmed", "sarah@example.com", demo_password_hash, "01011111111", "requester")
+        )
+        requester_id = cursor.lastrowid
+
+        cursor.execute(
+            "INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)",
+            ("Omar Hassan", "omar@example.com", demo_password_hash, "01022222222", "donor")
+        )
+        donor_id = cursor.lastrowid
+
+        cursor.execute(
+            "INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)",
+            ("Admin User", "admin@example.com", demo_password_hash, "01033333333", "admin")
+        )
+
+        now = current_time()
+
+        # 3. Create demo requests (one pending for admin demo, one approved for public browse)
+        cursor.execute(
+            """INSERT INTO requests (user_id, title, description, amount_needed, category, status, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (requester_id, "Need help with semester tuition TEST", "Urgent support needed for upcoming college fees.", 2500, "education", "pending", now)
+        )
+
+        cursor.execute(
+            """INSERT INTO requests (user_id, title, description, amount_needed, category, status, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (requester_id, "Monthly grocery support TEST", "Assistance needed for basic monthly groceries.", 800, "general", "approved", now)
+        )
+        approved_request_id = cursor.lastrowid
+
+        # 4. Create demo support record connecting donor to the approved request
+        cursor.execute(
+            """INSERT INTO supports (request_id, donor_id, message, created_at)
+               VALUES (?, ?, ?, ?)""",
+            (approved_request_id, donor_id, "I would love to help cover part of this!", now)
+        )
+
+        conn.commit()
+        print("Demo data seeded successfully!")
+    finally:
+        conn.close()
+
+
+
