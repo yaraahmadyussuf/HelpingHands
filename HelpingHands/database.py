@@ -1,15 +1,18 @@
 import sqlite3 as db
 import time
+from typing import Any
 
 #connect with database
-def get_db_connection() :
+def get_db_connection():
     conn = db.connect("HelpingHands.db")
-    conn.row_factory = db.Row        # cast from tuple to dictionary to call with column not order
-    conn.execute("PRAGMA foreign_keys = ON;")        #for safety
+    # cast from tuple to dictionary to call with column not order
+    conn.row_factory = db.Row
+    #for safety
+    conn.execute("PRAGMA foreign_keys = ON;")
     return conn
 
 #create tables --> users - request - support 
-def tables_db() :
+def tables_db():
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -60,12 +63,13 @@ def tables_db() :
 def current_time():
     return time.strftime("%Y-%m-%d %H:%M:%S")
 
-#Users Functions
-def email_exists(email: str) :
+#User Functions
+def email_exists(email: str):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT 1 FROM users WHERE email = ?", (email,))  #return the raw if existed
+    #select data from database and return the raw if existed
+    cursor.execute("SELECT 1 FROM users WHERE email = ?", (email,))
     result = cursor.fetchone()  #selsct one
 
     conn.close()
@@ -78,7 +82,7 @@ def email_exists(email: str) :
 
 
 # Creates a new user record if the email is unique, returning the generated user_id or None if duplicate
-def create_user(name: str, email: str, password_hash: str, phone: str, role: str) :
+def create_user(name: str, email: str, password_hash: str, phone: str, role: str):
 
     if email_exists(email) :
         return None
@@ -89,6 +93,7 @@ def create_user(name: str, email: str, password_hash: str, phone: str, role: str
     # Parameterized query to prevent SQL injection and map parameters to placeholders
     query = "INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)"
 
+    #insert data to database
     cursor.execute(query, (name, email, password_hash, phone, role))
     conn.commit()
 
@@ -99,27 +104,29 @@ def create_user(name: str, email: str, password_hash: str, phone: str, role: str
     return user_id
 
 
-def get_user_by_email(email: str) :
+def get_user_by_email(email: str):
     #connect with databse + access by cursor
     conn = get_db_connection()
     cursor = conn.cursor()
 
     #if mail exists will return the < user > else return < None > then close database
     try :
-        cursor = conn.execute("SELECT * FROM users WHERE email = ?", (email,))
+        #select data from database
+        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
         user = cursor.fetchone() 
         return user
     finally :
         conn.close()
 
-def get_user_by_id(user_id: int) :
+def get_user_by_id(user_id: int):
     #connect with databse + access by cursor
     conn = get_db_connection()
     cursor = conn.cursor()
 
     #if mail exists will return the < user_id > else return < None > then close database
     try :
-        cursor = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        #select data from database
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
         user = cursor.fetchone() 
         return user
     finally :
@@ -132,45 +139,213 @@ def get_all_users():
 
     #if there is users return them all with information but not password for safety then close database
     try :
-        cursor = conn.execute("SELECT id, name, email, phone, role FROM users")
+        #select data from database
+        cursor.execute("SELECT id, name, email, phone, role FROM users")
         all_users = cursor.fetchall()
         return all_users
     finally :
         conn.close()
 
+#request functions
+def create_request(user_id: int, title: str, description: str , amount_needed: float, category: str = "general"):
+    #connect with databse + access by cursor
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    #try..finally --> to make sure that in all cases the database will close --> keep it safe + easier to debugg the code
+    try :
+        created_at = current_time()
+        query = "INSERT INTO requests (user_id, title, description, category, amount_needed, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+
+        #insert data to database
+        cursor.execute(query, (user_id, title, description, category, amount_needed, "pending", created_at))
+        conn.commit()
+        request_id  =cursor.lastrowid
+        return request_id
+    finally :
+        conn.close()
 
 
+def get_request_by_id(request_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    #if request exists will return the < request > else return < None > then close database
+    try :
+        #select data from database
+        cursor.execute("SELECT * FROM requests WHERE id = ?", (request_id,))
+        request = cursor.fetchone() 
+        return request
+    finally :
+        conn.close()
 
 
+def get_request_by_user_id(user_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    #if request exists will return the < request > else return < None > then close database
+    try :
+        #select data from database
+        cursor.execute("SELECT * FROM requests WHERE user_id = ? ORDER BY created_at DESC", (user_id,))
+        request = cursor.fetchall() 
+        return request
+    finally :
+        conn.close()
 
 
+def get_all_requests(status: str | None = "approved", category: str | None = None):
+    """
+    Fetches all requests from the database with optional filtering by status and category.
 
-
-#JUST TESTING FOR ME NOT RELATED TO CODE OR AFFECT DATABASE
-if __name__ == "__main__":
-    print("---> Starting Day 1 Tests <---")
+    Parameters:
+    - status (str | None): Defaults to "approved" so regular users only see approved requests. 
+                           Can be set to None (e.g., by admins) to fetch requests regardless of status.
+    - category (str | None): Defaults to None (fetch all categories). If specified, filters by that category.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
-    tables_db()
-    print("1. Database initialized.")
+    try:
+        # Condition 1: Both status and category are provided.
+        # SQLite filters using both conditions connected with 'AND'.
+        if status and category:
+            cursor.execute(
+                "SELECT * FROM requests WHERE status = ? AND category = ? ORDER BY created_at DESC", 
+                (status, category)
+            )
+            
+        # Condition 2: Only status is provided (e.g., default user view for all categories).
+        elif status:
+            cursor.execute(
+                "SELECT * FROM requests WHERE status = ? ORDER BY created_at DESC", 
+                (status,)
+            )
+            
+        # Condition 3: Only category is provided while status is None (e.g., admin viewing a specific category across all statuses).
+        elif category:
+            cursor.execute(
+                "SELECT * FROM requests WHERE category = ? ORDER BY created_at DESC", 
+                (category,)
+            )
+            
+        # Condition 4: Neither status nor category is provided (admin fetching all requests without any filter).
+        else:
+            cursor.execute("SELECT * FROM requests ORDER BY created_at DESC")
 
-    user_id = create_user("Gehad Khaled", "gehad@example.com", "hashed_secret_123", "01012345678", "admin")
-    print(f"2. User created with ID: {user_id}")
 
-    duplicate_user_id = create_user("Another Gehad", "gehad@example.com", "hashed_secret_456", "01112345678", "donor")
-    print(f"3. Duplicate user attempt result (Should be None): {duplicate_user_id}")
+        all_requests = cursor.fetchall()
+        return all_requests
+        
+    finally:
+        conn.close()
 
-    user_by_email = get_user_by_email("gehad@example.com")
-    if user_by_email:
-        print(f"4. Found by email: {user_by_email['name']} | Role: {user_by_email['role']}")
 
-    if user_id is not None:
-        user_by_id = get_user_by_id(user_id)
-        if user_by_id:
-            print(f"5. Found by ID: {user_by_id['email']}")
+def search_requests(keyword: str, status: str | None = "approved"):
+    """
+    Searches for a keyword inside request titles, descriptions, or categories, with optional status filtering.
 
-    all_users = get_all_users()
-    print(f"6. Total users fetched: {len(all_users)}")
-    for u in all_users:
-        print("   User Data:", dict(u))
+    Parameters:
+    - keyword (str): The search phrase entered by the user.
+    - status (str | None): Defaults to "approved" for general search. Set to None for admin global search.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Prepare partial matching for SQLite using wildcard characters (%)
+    # The '%' wildcard matches any sequence of characters before or after the keyword
+    search_pattern = f"%{keyword}%"
 
-    print("---> All Day 1 Tests Finished <---")
+    try:
+        # Scenario 1: Status filtering is active (regular user search).
+        # Parentheses group the OR statements for fields so the AND status condition applies correctly.
+        # Pass search_pattern 3 times to match the 3 LIKE placeholders + 1 for status (total 4 parameters).
+        if status:
+            cursor.execute(
+                "SELECT * FROM requests WHERE (title LIKE ? OR description LIKE ? OR category LIKE ?) AND status = ? ORDER BY created_at DESC", 
+                (search_pattern, search_pattern, search_pattern, status)
+            )
+            
+        # Scenario 2: Status is None (admin searching across pending, approved, and rejected requests).
+        # The status constraint is removed, requiring only 3 parameters for the LIKE placeholders.
+        else:
+            cursor.execute(
+                "SELECT * FROM requests WHERE (title LIKE ? OR description LIKE ? OR category LIKE ?) ORDER BY created_at DESC", 
+                (search_pattern, search_pattern, search_pattern)
+            )
+            
+        requests = cursor.fetchall()
+        return requests
+        
+    finally:
+        conn.close()
+
+
+
+def update_request(request_id: int, user_id: int, **fields: Any):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    allowed_fields = ["title", "description", "category", "amount_needed"]
+
+    try:
+        request = get_request_by_id(request_id) 
+        if not request or request["user_id"] != user_id:
+            return False
+
+        updates: dict[str, Any] = {}
+        for key, value in fields.items():
+            if key in allowed_fields:
+                updates[key] = value
+        if not updates:
+            return False
+        if "amount_needed" in updates and updates["amount_needed"] <= 0:
+            return False
+
+        #ADVANCED#
+        set_clause = ", ".join([f"{key} = ?" for key in updates.keys()])
+        values = list(updates.values())
+        values.append(request_id)
+
+        query = f"UPDATE requests SET {set_clause} WHERE id = ?"
+        #####
+        cursor.execute(query, values)
+        conn.commit()
+        return True
+    finally:
+        conn.close()
+
+
+def delete_request(request_id: int, user_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        request = get_request_by_id(request_id) 
+        if not request or request["user_id"] != user_id:
+            return False
+        
+        cursor.execute("DELETE FROM requests WHERE id = ?", (request_id,))
+        conn.commit()
+        return True
+    finally:
+        conn.close()
+
+
+def update_request_status(request_id: int, status: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    allowed_status = ["pending", "approved", "rejected"]
+
+    try:
+        if get_request_by_id(request_id) and status in allowed_status :
+            cursor.execute("UPDATE requests SET status = ? WHERE id = ?", (status, request_id))
+            conn.commit()
+            return True
+        else:
+            return False
+    finally:
+        conn.close()
+
+
+
+
