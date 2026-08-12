@@ -52,6 +52,11 @@
                 {{ request["status"] }}
             </p>
 
+            <!-- Link to view the full details of this help request -->
+            <a href="{{ url_for('requests.request_details', request_id=request['id']) }}">
+                View Details
+            </a>
+
             <hr>
 
         </div>

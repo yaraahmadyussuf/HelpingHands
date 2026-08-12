@@ -1,36 +1,38 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Edit Help Request</title>
-<!-- connect the HTML page to the CSS file-->
 
+    <!-- Connect the HTML page to the CSS file -->
     <link
         rel="stylesheet"
         href="{{ url_for('static', filename='css/requests.css') }}"
     >
-
 </head>
 
 <body>
-<!-- Page Title-->
 
+    <!-- Page title -->
     <h1>Edit Help Request</h1>
-<!-- form where the user has the ability to edit his info of the request-->
-    <form>
-<!-- input for editing the request title-->
 
+    <!-- Form that allows the user to edit the help request information -->
+    <form method="POST">
+
+        <!-- Input for editing the request title -->
         <label for="title">Title:</label>
         <br>
+
         <input
             type="text"
             id="title"
             name="title"
-            value="Help with University Fees"
+            value="{{ request['title'] }}"
         >
 
         <br><br>
-<!-- text area for editing the description -->
 
+        <!-- Text area for editing the request description -->
         <label for="description">Description:</label>
         <br>
 
@@ -38,27 +40,51 @@
             id="description"
             name="description"
             rows="6"
-        >I need help paying my university tuition.</textarea>
+        >{{ request['description'] }}</textarea>
 
         <br><br>
-<!-- dropdown menu for editing the category -->
 
+        <!-- Dropdown menu for editing the request category -->
         <label for="category">Category:</label>
         <br>
 
         <select id="category" name="category">
 
-            <option value="Education" selected>Education</option>
-            <option value="Medical">Medical</option>
-            <option value="Food">Food</option>
-            <option value="Housing">Housing</option>
-            <option value="Other">Other</option>
+            <!-- Select Education if the current category is Education -->
+            <option value="Education"
+                {% if request['category'] == 'Education' %}selected{% endif %}>
+                Education
+            </option>
+
+            <!-- Select Medical if the current category is Medical -->
+            <option value="Medical"
+                {% if request['category'] == 'Medical' %}selected{% endif %}>
+                Medical
+            </option>
+
+            <!-- Select Food if the current category is Food -->
+            <option value="Food"
+                {% if request['category'] == 'Food' %}selected{% endif %}>
+                Food
+            </option>
+
+            <!-- Select Housing if the current category is Housing -->
+            <option value="Housing"
+                {% if request['category'] == 'Housing' %}selected{% endif %}>
+                Housing
+            </option>
+
+            <!-- Select Other if the current category is Other -->
+            <option value="Other"
+                {% if request['category'] == 'Other' %}selected{% endif %}>
+                Other
+            </option>
 
         </select>
 
         <br><br>
-<!-- input for editing the amount of mnoey needed-->
 
+        <!-- Input for editing the amount of money needed -->
         <label for="amount_needed">Amount Needed:</label>
         <br>
 
@@ -66,17 +92,27 @@
             type="number"
             id="amount_needed"
             name="amount_needed"
-            value="10000"
+            value="{{ request['amount_needed'] }}"
             min="0"
             step="0.01"
         >
 
         <br><br>
-<!-- button for submitting the edit request-->
 
+        <!-- Button for submitting the edited request -->
         <button type="submit">Save Changes</button>
 
     </form>
 
+    <br>
+
+    <!-- Link to cancel editing and return to the request details page -->
+    <a href="{{ url_for('requests.request_details', request_id=request['id']) }}">
+        Cancel
+    </a>
+
 </body>
+
 </html>
+
+        

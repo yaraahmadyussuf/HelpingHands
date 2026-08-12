@@ -1,45 +1,74 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Request Details</title>
-<!-- connect the HTML to the CSS file-->
+
+    <!-- Connect the HTML page to the CSS file -->
     <link
         rel="stylesheet"
         href="{{ url_for('static', filename='css/requests.css') }}"
     >
-
 </head>
 
 <body>
-<!-- title of the help request-->
 
-    <h1>Help with University Fees</h1>
+    <!-- Page title -->
+    <h1>Help Request Details</h1>
 
+    <!-- Display the title of the help request -->
+    <h2>{{ request["title"] }}</h2>
+
+    <!-- Display the category of the request -->
     <p>
         <strong>Category:</strong>
-        Education
+        {{ request["category"] }}
     </p>
 
+    <!-- Display the description of the request -->
     <h3>Description</h3>
 
     <p>
-        I need help paying my university tuition.
+        {{ request["description"] }}
     </p>
 
+    <!-- Display the amount of money needed -->
     <p>
         <strong>Amount Needed:</strong>
-        10,000 EGP
+        {{ request["amount_needed"] }} EGP
     </p>
 
+    <!-- Display the current status of the request -->
     <p>
-        <!-- current status of the request-->
         <strong>Status:</strong>
-        Pending
+        {{ request["status"] }}
+    </p>
+
+    <!-- Display when the request was created -->
+    <p>
+        <strong>Created At:</strong>
+        {{ request["created_at"] }}
     </p>
 
     <hr>
-<!-- button that allows the dononr to offer help-->
+
+    <!-- Button that will later allow the donor to offer help -->
     <button>I Want to Help</button>
 
+    <br><br>
+
+    <!-- Link to edit this help request -->
+    <a href="{{ url_for('requests.edit_request', request_id=request['id']) }}">
+    Edit Request
+    </a>
+
+    <br><br>
+
+    <!-- Link to return to the list of help requests -->
+    <a href="{{ url_for('requests.list_requests') }}">
+    Back to Help Requests
+    </a>
+
 </body>
+
 </html>

@@ -3,7 +3,7 @@
 # url_for for generating url for another flask route
 #render_template takes the HTML file from the template folder and send it to the browser for the  user to see
 from flask import Blueprint, render_template, request, redirect, url_for
-from database import get_db_connection
+from database import get_db_connection, get_request_by_id
 
 # Blueprint in Flask is a way to organize related routes into a separate section of your project.
 # Create a Blueprint for all help-request routes organizes it separatley from the app.py file
@@ -56,7 +56,39 @@ def create_request():
 
     # If the user is simply opening the page, display the create form.
     return render_template("requests/create.html")
-    
 
+# Display the details of one specific help request.
+@requests_bp.route("/requests/<int:request_id>")
+def request_details(request_id):
+
+    # Get the request from the database using its ID.
+    request = get_request_by_id(request_id)
+
+    # If the request does not exist, show an error message.
+    if request is None:
+        return "Help request not found.", 404
+
+    # Send the request information to the details HTML page.
+    return render_template(
+        "requests/details.html",
+        request=request
+    )
+
+# Display the edit form for a specific help request.
+@requests_bp.route("/requests/<int:request_id>/edit")
+def edit_request(request_id):
+
+    # Get the request from the database using its ID.
+    request = get_request_by_id(request_id)
+
+    # If the request does not exist, show an error message.
+    if request is None:
+        return "Help request not found.", 404
+
+    # Send the request information to the edit HTML page.
+    return render_template(
+        "requests/edit.html",
+        request=request
+    )
 
 
