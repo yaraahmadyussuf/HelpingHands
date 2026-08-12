@@ -64,6 +64,15 @@
 
     <br><br>
 
+    <!-- Button for deleting this help request -->
+    <form method="POST"
+      action="{{ url_for('requests.delete_request', request_id=request['id']) }}">
+
+    <button type="submit">Delete Request</button>
+</form>
+
+    <br><br>
+
     <!-- Link to return to the list of help requests -->
     <a href="{{ url_for('requests.list_requests') }}">
     Back to Help Requests

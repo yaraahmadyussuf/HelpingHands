@@ -15,9 +15,32 @@
 
     <!-- Page title -->
     <h1>Help Requests</h1>
+    <!-- Search form for finding help requests -->
+    <form method="GET" action="{{ url_for('requests.list_requests') }}">
+
+        <!-- Input where the user enters what they want to search for -->
+        <input
+        type="text"
+        name="search"
+        placeholder="Search help requests..."
+        value="{{ search }}"
+    >
+
+    <!-- Button for submitting the search -->
+    <button type="submit">Search</button>
+
+</form>
+
+<br>
 
     <!-- Short description of this page -->
     <p>Find people who need help.</p>
+
+    <!-- Link to create a new help request -->
+    <a href="{{ url_for('requests.create_request') }}">
+    Create a Help Request
+    </a>
+
 
     <hr>
 

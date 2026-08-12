@@ -1,44 +1,59 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Create Help Request</title>
 
-    <!-- connect this HTML file to the CSS file -->
-
-    <link    
-        rel="stylesheet" 
+    <!-- Connect this HTML file to the CSS file -->
+    <link
+        rel="stylesheet"
         href="{{ url_for('static', filename='css/requests.css') }}"
     >
-
 </head>
 
 <body>
-                                     <!-- Page Title -->
+
+    <!-- Page title -->
     <h1>Create a Help Request</h1>
 
-<!-- Form where the user enter his information for the help request -->
- <!-- the POST  send the submitted data to create_request route in requests.py -->
+    <!-- Form where the user enters information for the help request -->
+    <form method="POST">
 
-    <form method="POST" action="{{ url_for('requests.create_request') }}">
-
-<!-- input for the request title -->
-
+        <!-- Input for the request title -->
         <label for="title">Title:</label>
         <br>
-       
-        <input type="text" id="title" name="title">
-        <br><br>
-<!--  text area for the detailed description -->
 
+        <input
+            type="text"
+            id="title"
+            name="title"
+            required
+        >
+
+        <br><br>
+
+        <!-- Text area for the detailed description -->
         <label for="description">Description:</label>
         <br>
-        <textarea id="description" name="description" rows="6"></textarea>
-        <br><br>
-<!-- dropdown menu for the category -->
 
+        <textarea
+            id="description"
+            name="description"
+            rows="6"
+            required
+        ></textarea>
+
+        <br><br>
+
+        <!-- Dropdown menu for the category -->
         <label for="category">Category:</label>
         <br>
-        <select id="category" name="category">
+
+        <select
+            id="category"
+            name="category"
+            required
+        >
 
             <option value="">Select a category</option>
             <option value="Education">Education</option>
@@ -50,24 +65,34 @@
         </select>
 
         <br><br>
-<!-- input for the amount of money needed -->
 
+        <!-- Input for the amount of money needed -->
         <label for="amount_needed">Amount Needed:</label>
         <br>
+
         <input
             type="number"
             id="amount_needed"
             name="amount_needed"
-            min="0"
+            min="0.01"
             step="0.01"
+            required
         >
 
         <br><br>
-<!-- submit button for submitting the data -->
 
+        <!-- Button for submitting the request -->
         <button type="submit">Submit Request</button>
 
     </form>
 
+    <br><br>
+
+    <!-- Link to return to the list of help requests -->
+    <a href="{{ url_for('requests.list_requests') }}">
+        Back to Help Requests
+    </a>
+
 </body>
+
 </html>
