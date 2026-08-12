@@ -443,3 +443,5 @@ def get_admin_stats():
         conn.close()
 
 #get_all_users() & update_request_status() --> also for admin
+
+tables_db()
