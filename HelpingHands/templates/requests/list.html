@@ -1,102 +1,68 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Help Requests</title>
-<!-- connects the HTML to the CSS file-->
+
+    <!-- Connect this HTML file to the CSS file -->
     <link
         rel="stylesheet"
         href="{{ url_for('static', filename='css/requests.css') }}"
     >
-
 </head>
 
 <body>
-<!-- page title-->
 
+    <!-- Page title -->
     <h1>Help Requests</h1>
-<!-- short description of the page-->
 
+    <!-- Short description of this page -->
     <p>Find people who need help.</p>
 
     <hr>
-<!-- search form for finding help request-->
 
-    <h3>Search</h3>
+    <!-- Display all requests from the database -->
+    {% for request in requests %}
 
-    <form>
-<!-- input where the user can search with the word -->
-        <input
-            type="text"
-            placeholder="Search requests..."
-        >
-<!-- button for submiting the search-->
+        <div>
 
-        <button type="submit">Search</button>
+            <!-- Request title -->
+            <h2>{{ request["title"] }}</h2>
 
-    </form>
+            <!-- Request description -->
+            <p>
+                {{ request["description"] }}
+            </p>
 
-    <br>
-<!-- dropdown menu for filtering the request by category-->
-    <h3>Filter by Category</h3>
+            <!-- Request category -->
+            <p>
+                <strong>Category:</strong>
+                {{ request["category"] }}
+            </p>
 
-    <select>
+            <!-- Amount needed -->
+            <p>
+                <strong>Amount Needed:</strong>
+                {{ request["amount_needed"] }} EGP
+            </p>
 
-        <option>All Categories</option>
-        <option>Education</option>
-        <option>Medical</option>
-        <option>Food</option>
-        <option>Housing</option>
-        <option>Other</option>
+            <!-- Request status -->
+            <p>
+                <strong>Status:</strong>
+                {{ request["status"] }}
+            </p>
 
-    </select>
+            <hr>
 
-    <hr>
+        </div>
 
-    <!-- Example request -->
+    {% else %}
 
-    <div>
+        <!-- Message shown when there are no requests -->
+        <p>No help requests have been created yet.</p>
 
-        <h2>Help with University Fees</h2>
-
-        <p>
-            I need help paying my university tuition.
-        </p>
-
-        <p>
-            Category: Education
-        </p>
-
-        <p>
-            Amount Needed: 10,000 EGP
-        </p>
-<!-- button that will later open the request detail-->
-        <button>View Details</button>
-
-    </div>
-
-    <hr>
-
-    <!-- Another example request -->
-
-    <div>
-
-        <h2>Medical Assistance</h2>
-
-        <p>
-            I need financial help for medical treatment.
-        </p>
-
-        <p>
-            Category: Medical
-        </p>
-
-        <p>
-            Amount Needed: 5,000 EGP
-        </p>
-
-        <button>View Details</button>
-
-    </div>
+    {% endfor %}
 
 </body>
+
 </html>
