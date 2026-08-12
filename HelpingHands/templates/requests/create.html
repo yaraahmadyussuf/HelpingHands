@@ -17,8 +17,10 @@
     <h1>Create a Help Request</h1>
 
 <!-- Form where the user enter his information for the help request -->
+ <!-- the POST  send the submitted data to create_request route in requests.py -->
 
-    <form>
+    <form method="POST" action="{{ url_for('requests.create_request') }}">
+
 <!-- input for the request title -->
 
         <label for="title">Title:</label>
