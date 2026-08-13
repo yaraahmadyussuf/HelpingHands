@@ -6,10 +6,38 @@
 from flask import Flask, request, render_template, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash #turns text(pass) into a secure hash before we put it in the database
 from database import (email_exists, create_user, get_user_by_email, get_user_by_id)
+from functools import wraps
 
 helping_hands = Flask(__name__)
 helping_hands.secret_key = "helping-hands-secret-key" #protects the session data
 
+
+# ===================== authorization part =========================
+
+# access to pages available for logged in users
+def login_required(function):
+    @wraps(function)
+    def wrapper(*args, **kwargs):
+        if "user_id" not in session:
+            return "Please login first."
+
+        return function(*args, **kwargs)
+    return wrapper
+
+# access to pages available for logged in users and required role
+def role_required(required_role):
+    def function_required(function):
+        @wraps(function)
+        def wrapper(*args, **kwargs):
+            if "user_id" not in session:
+                return "Please login first."
+
+            if session["role"] != required_role:
+                return "You are not allowed to acces this page."
+
+            return function(*args, **kwargs)
+        return wrapper
+    return function_required
 
 @helping_hands.route("/") #going to the url to run the home function
 
@@ -77,6 +105,15 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("home"))
+
+
+# ===================== role: Admin =========================
+@helping_hands.route("/admin")
+
+@role_required("admin")
+def admin(): #admin is the function sent as an argument to login_required
+    return "Welcome to the Admin Dashboard!"
+
 
 if __name__ == "__main__":
     helping_hands.run(debug=True)
