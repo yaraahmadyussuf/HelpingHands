@@ -3,13 +3,12 @@
 #url_for: find a flask route by its function name
 #session: remembers the user is logged in 3amel zy id card mo2aqat
 
-from flask import Flask, request, render_template, redirect, url_for, session
+from flask import Blueprint, request, render_template, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash #turns text(pass) into a secure hash before we put it in the database
 from database import (email_exists, create_user, get_user_by_email, get_user_by_id)
 from functools import wraps
 
-helping_hands = Flask(__name__)
-helping_hands.secret_key = "helping-hands-secret-key" #protects the session data
+auth_bp = Blueprint("auth", __name__)
 
 
 # ===================== authorization part =========================
@@ -33,19 +32,19 @@ def role_required(required_role):
                 return "Please login first."
 
             if session["role"] != required_role:
-                return "You are not allowed to acces this page."
+                return "You are not allowed to access this page."
 
             return function(*args, **kwargs)
         return wrapper
     return function_required
 
-@helping_hands.route("/") #going to the url to run the home function
+@auth_bp.route("/") #going to the url to run the home function
 
 def home():
     return render_template("homepage.html", user=session)
 
 # ===================== registration part =========================
-@helping_hands.route("/register", methods=["GET", "POST"]) #goes to the register page. get:shows the page. post:sends info to flask
+@auth_bp.route("/register", methods=["GET", "POST"]) #goes to the register page. get:shows the page. post:sends info to flask
 
 def register(): #request.method is how the brwoser contacts flask by either get or post
     if request.method == "POST": #if the user submitted the info or not
@@ -77,7 +76,7 @@ def register(): #request.method is how the brwoser contacts flask by either get 
 
 
 # ===================== login part =========================
-@helping_hands.route("/login", methods=["GET", "POST"])
+@auth_bp.route("/login", methods=["GET", "POST"])
 
 def login():
     if request.method == "POST":
@@ -92,7 +91,7 @@ def login():
             session["name"] = user["name"]
             session["role"] = user["role"]
 
-            return redirect(url_for("home")) #sends user to home()
+            return redirect(url_for("auth.home")) #sends user to home()
 
         return "Invalid email or password."
 
@@ -100,20 +99,16 @@ def login():
 
 
 # ===================== logout part =========================
-@helping_hands.route("/logout")
+@auth_bp.route("/logout")
 
 def logout():
     session.clear()
-    return redirect(url_for("home"))
+    return redirect(url_for("auth.home"))
 
 
 # ===================== role: Admin =========================
-@helping_hands.route("/admin")
+@auth_bp.route("/admin")
 
 @role_required("admin")
-def admin(): #admin is the function sent as an argument to login_required
+def admin(): #admin is the function sent as an argument to role_required
     return "Welcome to the Admin Dashboard!"
-
-
-if __name__ == "__main__":
-    helping_hands.run(debug=True)
