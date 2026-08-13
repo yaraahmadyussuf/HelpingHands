@@ -52,8 +52,78 @@
 
     <hr>
 
-    <!-- Button that will later allow the donor to offer help -->
-    <button>I Want to Help</button>
+    <!-- Form for a donor to offer help -->
+<form
+    method="POST"
+    action="{{ url_for(
+        'requests.support_request',
+        request_id=request['id']
+    ) }}"
+>
+
+    <!-- Optional message from the donor -->
+    <label for="message">
+        Message:
+    </label>
+
+    <br>
+
+    <textarea
+        id="message"
+        name="message"
+        rows="4"
+        placeholder="Write a message to the requester (optional)"
+    ></textarea>
+
+    <br><br>
+
+    <!-- Button for offering help -->
+    <button type="submit">
+        I Want to Help
+    </button>
+
+    <hr>
+
+<!-- Display donors who offered to help -->
+<h2>People Who Want to Help</h2>
+
+{% for supporter in supporters %}
+
+    <div>
+
+        <!-- Donor name -->
+        <p>
+            <strong>Donor:</strong>
+            {{ supporter["donor_name"] }}
+        </p>
+
+        <!-- Donor message -->
+        {% if supporter["message"] %}
+            <p>
+                <strong>Message:</strong>
+                {{ supporter["message"] }}
+            </p>
+        {% endif %}
+
+        <!-- Date of support -->
+        <p>
+            <strong>Offered Help:</strong>
+            {{ supporter["created_at"] }}
+        </p>
+
+        <hr>
+
+    </div>
+
+{% else %}
+
+    <p>
+        No one has offered to help yet.
+    </p>
+
+{% endfor %}
+
+</form>
 
     <br><br>
 
@@ -66,9 +136,11 @@
 
     <!-- Button for deleting this help request -->
     <form method="POST"
-      action="{{ url_for('requests.delete_request', request_id=request['id']) }}">
+      action="{{ url_for('requests.delete_request_route', request_id=request['id']) }}">
 
     <button type="submit">Delete Request</button>
+
+    
 </form>
 
     <br><br>

@@ -26,6 +26,48 @@
         value="{{ search }}"
     >
 
+    <!-- Category filter -->
+    <select name="category">
+
+    <!-- Show all categories -->
+    <option value="all"
+        {% if category == "all" %}selected{% endif %}>
+        All Categories
+    </option>
+
+    <!-- Education category -->
+    <option value="Education"
+        {% if category == "Education" %}selected{% endif %}>
+        Education
+    </option>
+
+    <!-- Medical category -->
+    <option value="Medical"
+        {% if category == "Medical" %}selected{% endif %}>
+        Medical
+    </option>
+
+    <!-- Food category -->
+    <option value="Food"
+        {% if category == "Food" %}selected{% endif %}>
+        Food
+    </option>
+
+    <!-- Housing category -->
+    <option value="Housing"
+        {% if category == "Housing" %}selected{% endif %}>
+        Housing
+    </option>
+
+    <!-- Other category -->
+    <option value="Other"
+        {% if category == "Other" %}selected{% endif %}>
+        Other
+    </option>
+
+</select>
+
+
     <!-- Button for submitting the search -->
     <button type="submit">Search</button>
 

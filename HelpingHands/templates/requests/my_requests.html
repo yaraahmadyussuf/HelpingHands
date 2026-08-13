@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>My Requests</title>
- <!-- Connect this HTML file to the CSS file -->
 
+<head>
+
+    <title>My Help Requests</title>
+
+    <!-- Connect the HTML page to the CSS file -->
     <link
         rel="stylesheet"
         href="{{ url_for('static', filename='css/requests.css') }}"
@@ -13,62 +15,64 @@
 
 <body>
 
+    <!-- Page title -->
     <h1>My Help Requests</h1>
 
-    <p>
-        Here you can manage the help requests you created.
-    </p>
-
-    <hr>
-<!-- example of 1 request belonging to the current user-->
-
-    <div>
-
-        <h2>Help with University Fees</h2>
-
-        <p>
-            Category: Education
-        </p>
-
-        <p>
-            Amount Needed: 10,000 EGP
-        </p>
-
-        <p>
-            Status: Pending
-        </p>
-
-        <button>View</button>
-        <button>Edit</button>
-        <button>Delete</button>
-
-    </div>
+    <!-- Short description -->
+    <p>These are the help requests you have created.</p>
 
     <hr>
 
-    <div>
+    <!-- Display the user's requests -->
+    {% for request in requests %}
 
-        <h2>Medical Assistance</h2>
+        <div>
 
-        <p>
-            Category: Medical
-        </p>
+            <!-- Request title -->
+            <h2>{{ request["title"] }}</h2>
 
-        <p>
-            Amount Needed: 5,000 EGP
-        </p>
+            <!-- Request description -->
+            <p>
+                {{ request["description"] }}
+            </p>
 
-        <p>
-            Status: Approved
-        </p>
-<!-- button that shows the request-->
-        <button>View</button>
-        <!-- button that edits the request-->
-        <button>Edit</button>
-        <!-- button than deletes the request-->
-        <button>Delete</button>
+            <!-- Request category -->
+            <p>
+                <strong>Category:</strong>
+                {{ request["category"] }}
+            </p>
 
-    </div>
+            <!-- Amount needed -->
+            <p>
+                <strong>Amount Needed:</strong>
+                {{ request["amount_needed"] }} EGP
+            </p>
+
+            <!-- Request status -->
+            <p>
+                <strong>Status:</strong>
+                {{ request["status"] }}
+            </p>
+
+            <!-- Link to view the request -->
+            <a href="{{ url_for(
+                'requests.request_details',
+                request_id=request['id']
+            ) }}">
+                View Details
+            </a>
+
+            <hr>
+
+        </div>
+
+    {% else %}
+
+        <!-- Message shown when the user has no requests -->
+        <p>You have not created any help requests yet.</p>
+
+    {% endfor %}
 
 </body>
+
 </html>
