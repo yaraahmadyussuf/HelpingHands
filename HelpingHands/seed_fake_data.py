@@ -24,6 +24,8 @@ Falls back to a small built-in name list automatically if faker isn't installed.
 
 import random
 import argparse
+import faker
+import werkzeug
 
 import database as db
 
