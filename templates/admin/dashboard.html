@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard — Helping Hands{% endblock %}
+
+{% block content %}
+
+<h1 class="hh-section-title h2 mb-1">Admin Dashboard</h1>
+<p class="text-muted mb-4">Moderate requests and keep an eye on the platform.</p>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="hh-stat">
+            <div class="hh-stat-value">{{ stats["total_users"] }}</div>
+            <div class="hh-stat-label">Total Users</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="hh-stat">
+            <div class="hh-stat-value">{{ stats["total_requests"] }}</div>
+            <div class="hh-stat-label">Total Requests</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="hh-stat">
+            <div class="hh-stat-value">{{ stats["pending_requests"] }}</div>
+            <div class="hh-stat-label">Pending Review</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="hh-stat">
+            <div class="hh-stat-value">{{ stats["approved_requests"] }}</div>
+            <div class="hh-stat-label">Approved</div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending requests: need a decision -->
+<div class="hh-card p-4 mb-4">
+    <h2 class="h5 mb-3">Pending Requests ({{ pending_requests|length }})</h2>
+
+    {% if pending_requests %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Created</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in pending_requests %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('requests.request_details', request_id=r['id']) }}">{{ r["title"] }}</a>
+                            </td>
+                            <td>{{ r["category"] }}</td>
+                            <td>{{ "%.2f"|format(r["amount_needed"]) }} EGP</td>
+                            <td class="text-muted small">{{ r["created_at"] }}</td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <form method="POST" action="{{ url_for('admin.change_status', request_id=r['id'], status='approved') }}">
+                                        <button type="submit" class="btn btn-sm btn-hh-primary">Approve</button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('admin.change_status', request_id=r['id'], status='rejected') }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted mb-0">Nothing waiting on you right now.</p>
+    {% endif %}
+</div>
+
+<!-- All requests -->
+<div class="hh-card p-4 mb-4">
+    <h2 class="h5 mb-3">All Requests ({{ all_requests|length }})</h2>
+
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in all_requests %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('requests.request_details', request_id=r['id']) }}">{{ r["title"] }}</a>
+                        </td>
+                        <td>{{ r["category"] }}</td>
+                        <td><span class="hh-badge hh-badge-{{ r['status'] }}">{{ r["status"] }}</span></td>
+                        <td>{{ "%.2f"|format(r["amount_needed"]) }} EGP</td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1">
+                                {% if r["status"] != "approved" %}
+                                    <form method="POST" action="{{ url_for('admin.change_status', request_id=r['id'], status='approved') }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-hh">Approve</button>
+                                    </form>
+                                {% endif %}
+                                {% if r["status"] != "rejected" %}
+                                    <form method="POST" action="{{ url_for('admin.change_status', request_id=r['id'], status='rejected') }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Reject</button>
+                                    </form>
+                                {% endif %}
+                                <form method="POST" action="{{ url_for('admin.delete_request_admin', request_id=r['id']) }}"
+                                      onsubmit="return confirm('Delete this request permanently?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5" class="text-muted text-center">No requests yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Users -->
+<div class="hh-card p-4">
+    <h2 class="h5 mb-3">Users ({{ users|length }})</h2>
+
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                    <tr>
+                        <td>{{ u["name"] }}</td>
+                        <td>{{ u["email"] }}</td>
+                        <td>{{ u["phone"] or "—" }}</td>
+                        <td><span class="hh-role-pill">{{ u["role"] }}</span></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="text-muted small mb-0">
+        User management actions (e.g. banning or changing a role) will need a couple of new
+        functions in <code>database.py</code> — flagging this for whoever owns that file.
+    </p>
+</div>
+
+{% endblock %}

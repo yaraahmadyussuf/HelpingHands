@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Helping Hands — Home{% endblock %}
+
+{% block content %}
+
+<div class="hh-hero mb-5">
+
+    <div class="hh-hero-copy hh-fade-up">
+        {% if session.get("user_id") %}
+            <h1 class="display-5 mb-2">Welcome back, {{ session["name"] }}.</h1>
+            <p class="lead mb-4">
+                You're signed in as a <strong>{{ session["role"] }}</strong>.
+                {% if session["role"] == "requester" %}
+                    Ready to share what you need help with?
+                {% elif session["role"] == "donor" %}
+                    Take a look at who needs a hand today.
+                {% elif session["role"] == "admin" %}
+                    A few requests may be waiting on your review.
+                {% endif %}
+            </p>
+
+            <div class="d-flex flex-wrap gap-2">
+                {% if session["role"] == "requester" %}
+                    <a class="btn btn-hh-accent" href="{{ url_for('requests.create_request') }}">Create a Help Request</a>
+                    <a class="btn btn-outline-hh bg-white" href="{{ url_for('requests.my_requests') }}">My Requests</a>
+                {% elif session["role"] == "donor" %}
+                    <a class="btn btn-hh-accent" href="{{ url_for('requests.list_requests') }}">Browse Requests</a>
+                    <a class="btn btn-outline-hh bg-white" href="{{ url_for('requests.my_supports') }}">My Supports</a>
+                {% elif session["role"] == "admin" %}
+                    <a class="btn btn-hh-accent" href="{{ url_for('admin.dashboard') }}">Go to Admin Dashboard</a>
+                {% endif %}
+            </div>
+        {% else %}
+            <h1 class="display-5 mb-2">A community that shows up for each other.</h1>
+            <p class="lead mb-4">
+                Ask for help when you need it. Offer it when you can.
+                Every request here is a real person, not a statistic.
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-hh-accent" href="{{ url_for('auth.register') }}">Get Started</a>
+                <a class="btn btn-outline-hh bg-white" href="{{ url_for('auth.login') }}">Login</a>
+            </div>
+        {% endif %}
+
+        <div class="hh-hero-stats">
+            <div class="hh-hero-stat">
+                <div class="hh-hero-stat-value" data-count="{{ stats['approved_requests'] }}">0</div>
+                <div class="hh-hero-stat-label">Requests approved</div>
+            </div>
+            <div class="hh-hero-stat">
+                <div class="hh-hero-stat-value" data-count="{{ stats['total_users'] }}">0</div>
+                <div class="hh-hero-stat-label">People in the community</div>
+            </div>
+            <div class="hh-hero-stat">
+                <div class="hh-hero-stat-value" data-count="{{ stats['pending_requests'] }}">0</div>
+                <div class="hh-hero-stat-label">Awaiting review right now</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hh-hero-art">
+        <!-- Two hands forming a supportive circle around a heart, with
+             gently floating dots standing in for the community. -->
+        <svg viewBox="0 0 400 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two hands supporting a heart, surrounded by floating dots representing the community">
+            <circle class="hh-float-slow" cx="60" cy="70" r="10" fill="#E7A33E" opacity="0.55"/>
+            <circle class="hh-float" cx="345" cy="60" r="7" fill="#FFFFFF" opacity="0.5"/>
+            <circle class="hh-float-slow" cx="355" cy="230" r="9" fill="#E7A33E" opacity="0.45"/>
+            <circle class="hh-float" cx="35" cy="250" r="6" fill="#FFFFFF" opacity="0.5"/>
+            <circle class="hh-float" cx="200" cy="30" r="5" fill="#FFFFFF" opacity="0.6"/>
+
+            <circle class="hh-pulse" cx="200" cy="190" r="120" fill="#FFFFFF" opacity="0.06"/>
+
+            <!-- left hand -->
+            <path d="M70 210 C 60 180, 75 150, 105 150 L 150 150 C 165 150, 178 158, 186 172 L 200 200 L 150 235 C 120 250, 85 245, 70 210 Z"
+                  fill="#F7F5F0"/>
+            <!-- right hand -->
+            <path d="M330 210 C 340 180, 325 150, 295 150 L 250 150 C 235 150, 222 158, 214 172 L 200 200 L 250 235 C 280 250, 315 245, 330 210 Z"
+                  fill="#F7F5F0" opacity="0.92"/>
+
+            <!-- heart cradled between the hands -->
+            <path class="hh-pulse" d="M200 205
+                     C 190 185, 160 185, 152 208
+                     C 145 228, 165 245, 200 268
+                     C 235 245, 255 228, 248 208
+                     C 240 185, 210 185, 200 205 Z"
+                  fill="#E7A33E"/>
+        </svg>
+    </div>
+
+</div>
+
+<!-- Category quick-links -->
+<div class="mb-5">
+    <h2 class="hh-section-title h5 mb-3">Browse by category</h2>
+    <div class="row g-3">
+        <div class="col-6 col-md">
+            <a class="hh-cat-chip w-100" href="{{ url_for('requests.list_requests', category='Education') }}">
+                <span class="hh-cat-icon" style="background:#E7F0F8; color:#3E7CB1;">🎓</span> Education
+            </a>
+        </div>
+        <div class="col-6 col-md">
+            <a class="hh-cat-chip w-100" href="{{ url_for('requests.list_requests', category='Medical') }}">
+                <span class="hh-cat-icon" style="background:#F8E1DF; color:#C1443C;">🏥</span> Medical
+            </a>
+        </div>
+        <div class="col-6 col-md">
+            <a class="hh-cat-chip w-100" href="{{ url_for('requests.list_requests', category='Food') }}">
+                <span class="hh-cat-icon" style="background:#FCEFD9; color:#93630D;">🍲</span> Food
+            </a>
+        </div>
+        <div class="col-6 col-md">
+            <a class="hh-cat-chip w-100" href="{{ url_for('requests.list_requests', category='Housing') }}">
+                <span class="hh-cat-icon" style="background:#EEE8F5; color:#7B5EA7;">🏠</span> Housing
+            </a>
+        </div>
+        <div class="col-6 col-md">
+            <a class="hh-cat-chip w-100" href="{{ url_for('requests.list_requests', category='Other') }}">
+                <span class="hh-cat-icon" style="background:#EFEEE9; color:#736F63;">🤝</span> Other
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Real, live requests - not a mockup -->
+{% if recent_requests %}
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-3">
+        <h2 class="hh-section-title h5 mb-0">Recently approved requests</h2>
+        <a href="{{ url_for('requests.list_requests') }}" class="small">See all &rarr;</a>
+    </div>
+    <div class="row g-4">
+        {% for request in recent_requests %}
+            <div class="col-md-4">
+                <a href="{{ url_for('requests.request_details', request_id=request['id']) }}" class="text-decoration-none text-reset">
+                    <div class="hh-card hh-request-card hh-cat-{{ request['category']|lower }} p-4 h-100">
+                        <span class="text-uppercase text-muted small fw-semibold">{{ request["category"] }}</span>
+                        <h3 class="h6 mt-1 mb-2">{{ request["title"] }}</h3>
+                        <p class="text-muted small mb-0">
+                            {{ request["description"][:90] }}{% if request["description"]|length > 90 %}...{% endif %}
+                        </p>
+                    </div>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="hh-card p-4 h-100">
+            <h3 class="h5 mb-1">1. Share a request</h3>
+            <p class="text-muted mb-0">Requesters describe what they need — medical, food, education, housing, or anything else.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="hh-card p-4 h-100">
+            <h3 class="h5 mb-1">2. Get discovered</h3>
+            <p class="text-muted mb-0">Donors browse and search approved requests to find who they'd like to support.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="hh-card p-4 h-100">
+            <h3 class="h5 mb-1">3. Connect &amp; help</h3>
+            <p class="text-muted mb-0">A donor taps "I Want to Help" and leaves a message — the requester sees who's offering.</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Count the hero stats up from 0 on load - small touch, real numbers underneath.
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-count]").forEach(function (el) {
+        var target = parseInt(el.getAttribute("data-count"), 10) || 0;
+        var duration = 900;
+        var start = null;
+
+        function step(timestamp) {
+            if (!start) start = timestamp;
+            var progress = Math.min((timestamp - start) / duration, 1);
+            el.textContent = Math.floor(progress * target);
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                el.textContent = target;
+            }
+        }
+
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            el.textContent = target;
+        } else {
+            window.requestAnimationFrame(step);
+        }
+    });
+});
+</script>
+{% endblock %}

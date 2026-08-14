@@ -1,0 +1,324 @@
+/* ===================================================================
+   Helping Hands — design tokens
+   Palette: deep teal (trust, growth) + warm amber (generosity, warmth)
+   on a soft warm-white surface. Avoids the generic cream/terracotta
+   and near-black/neon combos — this is a community platform, not a
+   startup landing page.
+   =================================================================== */
+
+:root{
+  --hh-primary:        #1F6F5C;
+  --hh-primary-dark:   #154A3E;
+  --hh-primary-light:  #E7F1EE;
+  --hh-accent:         #E7A33E;
+  --hh-accent-dark:    #C6841F;
+  --hh-bg:             #F7F5F0;
+  --hh-surface:        #FFFFFF;
+  --hh-text:           #26251F;
+  --hh-muted:          #736F63;
+  --hh-border:         #E7E3D8;
+  --hh-success:        #2F8F5B;
+  --hh-warning:        #E7A33E;
+  --hh-danger:         #C1443C;
+
+  --hh-font-display: 'Fraunces', Georgia, serif;
+  --hh-font-body: 'Inter', system-ui, -apple-system, sans-serif;
+
+  --hh-radius: 14px;
+  --hh-radius-sm: 8px;
+  --hh-shadow: 0 4px 16px rgba(38, 37, 31, 0.06);
+  --hh-shadow-hover: 0 10px 28px rgba(38, 37, 31, 0.10);
+}
+
+body{
+  background: var(--hh-bg);
+  color: var(--hh-text);
+  font-family: var(--hh-font-body);
+}
+
+h1, h2, h3, h4, .display-font{
+  font-family: var(--hh-font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+a{ color: var(--hh-primary); }
+a:hover{ color: var(--hh-primary-dark); }
+
+/* ---------------- Navbar ---------------- */
+.hh-navbar{
+  background: var(--hh-surface);
+  border-bottom: 1px solid var(--hh-border);
+}
+.hh-navbar .navbar-brand{
+  font-family: var(--hh-font-display);
+  font-weight: 700;
+  font-size: 1.35rem;
+  color: var(--hh-primary-dark);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.hh-navbar .navbar-brand .hh-tagline{
+  font-family: var(--hh-font-body);
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--hh-muted);
+  letter-spacing: 0;
+}
+.hh-navbar .navbar-brand .hh-mark{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--hh-primary);
+  color: #fff;
+  font-size: 1rem;
+}
+.hh-navbar .nav-link{
+  color: var(--hh-text);
+  font-weight: 500;
+}
+.hh-navbar .nav-link.active,
+.hh-navbar .nav-link:hover{
+  color: var(--hh-primary-dark);
+}
+.hh-role-pill{
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--hh-primary-light);
+  color: var(--hh-primary-dark);
+  font-weight: 600;
+}
+
+/* ---------------- Buttons ---------------- */
+.btn-hh-primary{
+  background: var(--hh-primary);
+  border-color: var(--hh-primary);
+  color: #fff;
+}
+.btn-hh-primary:hover{
+  background: var(--hh-primary-dark);
+  border-color: var(--hh-primary-dark);
+  color: #fff;
+}
+.btn-hh-accent{
+  background: var(--hh-accent);
+  border-color: var(--hh-accent);
+  color: #26251F;
+  font-weight: 600;
+}
+.btn-hh-accent:hover{
+  background: var(--hh-accent-dark);
+  border-color: var(--hh-accent-dark);
+  color: #26251F;
+}
+.btn-outline-hh{
+  border: 1.5px solid var(--hh-primary);
+  color: var(--hh-primary-dark);
+  background: transparent;
+}
+.btn-outline-hh:hover{
+  background: var(--hh-primary);
+  color: #fff;
+}
+
+/* ---------------- Hero ---------------- */
+.hh-hero{
+  background: linear-gradient(160deg, var(--hh-primary) 0%, var(--hh-primary-dark) 78%);
+  color: #fff;
+  border-radius: var(--hh-radius);
+  padding: 3.5rem 2.5rem;
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 2rem;
+  align-items: center;
+}
+@media (max-width: 767px){
+  .hh-hero{ grid-template-columns: 1fr; padding: 2.5rem 1.5rem; }
+  .hh-hero-art{ order: -1; max-width: 220px; margin: 0 auto; }
+}
+.hh-hero h1{ color: #fff; }
+.hh-hero p.lead{ color: rgba(255,255,255,0.85); }
+
+.hh-hero-copy{ position: relative; z-index: 2; }
+.hh-hero-art{ position: relative; z-index: 1; }
+.hh-hero-art svg{ width: 100%; height: auto; }
+
+/* Floating decorative dots behind the illustration */
+.hh-hero .hh-float{
+  animation: hh-float 5s ease-in-out infinite;
+  transform-origin: center;
+}
+.hh-hero .hh-float-slow{
+  animation: hh-float 7s ease-in-out infinite;
+}
+.hh-hero .hh-pulse{
+  animation: hh-pulse 3.2s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes hh-float{
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes hh-pulse{
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce){
+  .hh-hero .hh-float, .hh-hero .hh-float-slow, .hh-hero .hh-pulse{ animation: none; }
+}
+
+/* Live stat strip under the hero copy */
+.hh-hero-stats{
+  display: flex;
+  gap: 1.75rem;
+  margin-top: 1.75rem;
+  flex-wrap: wrap;
+}
+.hh-hero-stat .hh-hero-stat-value{
+  font-family: var(--hh-font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+.hh-hero-stat .hh-hero-stat-label{
+  color: rgba(255,255,255,0.75);
+  font-size: 0.78rem;
+  margin-top: 0.2rem;
+}
+
+/* Gentle entrance animation for content as the page loads */
+.hh-fade-up{
+  animation: hh-fade-up 0.6s ease both;
+}
+@keyframes hh-fade-up{
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce){
+  .hh-fade-up{ animation: none; }
+}
+
+/* ---------------- Cards ---------------- */
+.hh-card{
+  background: var(--hh-surface);
+  border: 1px solid var(--hh-border);
+  border-radius: var(--hh-radius);
+  box-shadow: var(--hh-shadow);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.hh-card:hover{
+  box-shadow: var(--hh-shadow-hover);
+  transform: translateY(-2px);
+}
+.hh-request-card{
+  border-left: 4px solid var(--hh-primary);
+}
+
+/* Category left-border accents so the list is scannable at a glance */
+.hh-cat-education{ border-left-color: #3E7CB1; }
+.hh-cat-medical{ border-left-color: #C1443C; }
+.hh-cat-food{ border-left-color: #E7A33E; }
+.hh-cat-housing{ border-left-color: #7B5EA7; }
+.hh-cat-other{ border-left-color: var(--hh-muted); }
+
+/* ---------------- Status badges ---------------- */
+.hh-badge{
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+}
+.hh-badge-pending{ background: #FCEFD9; color: #93630D; }
+.hh-badge-approved{ background: var(--hh-primary-light); color: var(--hh-primary-dark); }
+.hh-badge-rejected{ background: #F8E1DF; color: #8C2C25; }
+
+/* ---------------- Stat cards (admin dashboard) ---------------- */
+.hh-stat{
+  background: var(--hh-surface);
+  border: 1px solid var(--hh-border);
+  border-radius: var(--hh-radius);
+  padding: 1.25rem 1.5rem;
+}
+.hh-stat .hh-stat-value{
+  font-family: var(--hh-font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--hh-primary-dark);
+  line-height: 1;
+}
+.hh-stat .hh-stat-label{
+  color: var(--hh-muted);
+  font-size: 0.85rem;
+  margin-top: 0.3rem;
+}
+
+/* ---------------- Forms ---------------- */
+.hh-card form label{
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+.form-control:focus, .form-select:focus{
+  border-color: var(--hh-primary);
+  box-shadow: 0 0 0 0.2rem rgba(31, 111, 92, 0.15);
+}
+
+/* Category icon chips (homepage + browse) */
+.hh-cat-chip{
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--hh-radius-sm);
+  background: var(--hh-surface);
+  border: 1px solid var(--hh-border);
+  text-decoration: none;
+  color: var(--hh-text);
+  font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.hh-cat-chip:hover{
+  transform: translateY(-3px);
+  box-shadow: var(--hh-shadow-hover);
+  color: var(--hh-text);
+}
+.hh-cat-chip .hh-cat-icon{
+  width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+/* ---------------- Misc ---------------- */
+.hh-section-title{
+  font-family: var(--hh-font-display);
+  font-weight: 600;
+  color: var(--hh-text);
+}
+.hh-empty{
+  text-align: center;
+  color: var(--hh-muted);
+  padding: 3rem 1rem;
+}
+footer.hh-footer{
+  color: var(--hh-muted);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--hh-border);
+  padding: 1.5rem 0;
+}
+.table > :not(caption) > * > *{
+  vertical-align: middle;
+}

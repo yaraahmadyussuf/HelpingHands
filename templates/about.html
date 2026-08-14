@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}About Us — Helping Hands{% endblock %}
+
+{% block content %}
+
+<div class="hh-hero mb-5 text-center">
+    <p class="text-uppercase small mb-2" style="letter-spacing:0.1em; color: rgba(255,255,255,0.75);">Our Motto</p>
+    <h1 class="display-6 mb-0" dir="rtl" lang="ar">"خيرُ الناسِ أنفعُهم للناسِ"</h1>
+    <p class="lead mt-2 mb-0">"The best of people are those who are most beneficial to others."</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+
+        <div class="hh-card p-4 p-md-5 mb-4">
+            <h2 class="h4 mb-3">Who We Are</h2>
+            <p class="text-muted mb-0">
+                Helping Hands is a community platform that connects people who need support
+                with people who are able to give it. Whether it's help with medical costs,
+                education, food, housing, or something else entirely, our goal is simple: make
+                it easy to ask, easy to give, and easy to trust the person on the other side.
+            </p>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="hh-card p-4 h-100">
+                    <h3 class="h6 text-uppercase" style="color: var(--hh-primary-dark);">Our Mission</h3>
+                    <p class="text-muted small mb-0">
+                        To make community support accessible - anyone with a genuine need can ask,
+                        and anyone with the means to help can find them.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="hh-card p-4 h-100">
+                    <h3 class="h6 text-uppercase" style="color: var(--hh-primary-dark);">Our Values</h3>
+                    <p class="text-muted small mb-0">
+                        Transparency, dignity, and trust. Every request is reviewed before it goes
+                        public, and every donor's support is visible to the person they're helping.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="hh-card p-4 h-100">
+                    <h3 class="h6 text-uppercase" style="color: var(--hh-primary-dark);">How It Works</h3>
+                    <p class="text-muted small mb-0">
+                        Requesters share what they need. An admin reviews it. Donors browse
+                        approved requests and offer help directly.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="hh-card p-4 p-md-5 text-center">
+            <h2 class="h5 mb-2">Want to be part of it?</h2>
+            <p class="text-muted mb-4">Whether you need help or want to give it, you're welcome here.</p>
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                {% if not session.get("user_id") %}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-hh-primary">Join Helping Hands</a>
+                {% endif %}
+                <a href="{{ url_for('requests.list_requests') }}" class="btn btn-outline-hh">Browse Requests</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

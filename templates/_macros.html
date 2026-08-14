@@ -1,0 +1,8 @@
+{% macro category_icon(category) -%}
+    {%- if category == "Education" -%}🎓
+    {%- elif category == "Medical" -%}🏥
+    {%- elif category == "Food" -%}🍲
+    {%- elif category == "Housing" -%}🏠
+    {%- else -%}🤝
+    {%- endif -%}
+{%- endmacro %}

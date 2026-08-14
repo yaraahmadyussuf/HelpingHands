@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% from "_macros.html" import category_icon %}
+
+{% block title %}Help Requests — Helping Hands{% endblock %}
+
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-end mb-4 gap-3">
+    <div>
+        <h1 class="hh-section-title h2 mb-1">Help Requests</h1>
+        <p class="text-muted mb-0">Find people who need a hand.</p>
+    </div>
+
+    {% if session.get("role") == "requester" %}
+        <a class="btn btn-hh-accent" href="{{ url_for('requests.create_request') }}">+ Create a Help Request</a>
+    {% endif %}
+</div>
+
+<form method="GET" action="{{ url_for('requests.list_requests') }}" class="hh-card p-3 mb-4">
+    <div class="row g-2 align-items-center">
+        <div class="col-md-6">
+            <input
+                type="text"
+                name="search"
+                class="form-control"
+                placeholder="Search by title, description, or category..."
+                value="{{ search }}"
+            >
+        </div>
+
+        <div class="col-md-3">
+            <select name="category" class="form-select">
+                <option value="all" {% if category == "all" %}selected{% endif %}>All Categories</option>
+                <option value="Education" {% if category == "Education" %}selected{% endif %}>Education</option>
+                <option value="Medical" {% if category == "Medical" %}selected{% endif %}>Medical</option>
+                <option value="Food" {% if category == "Food" %}selected{% endif %}>Food</option>
+                <option value="Housing" {% if category == "Housing" %}selected{% endif %}>Housing</option>
+                <option value="Other" {% if category == "Other" %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-hh-primary w-100">Search</button>
+        </div>
+    </div>
+</form>
+
+<div class="row g-4">
+    {% for request in requests %}
+        <div class="col-md-6 col-lg-4">
+            <div class="hh-card hh-request-card hh-cat-{{ request['category']|lower }} p-4 h-100 d-flex flex-column">
+
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-uppercase text-muted small fw-semibold">{{ category_icon(request["category"]) }} {{ request["category"] }}</span>
+                    <span class="hh-badge hh-badge-{{ request['status'] }}">{{ request["status"] }}</span>
+                </div>
+
+                <h2 class="h5 mb-2">{{ request["title"] }}</h2>
+                <p class="text-muted small mb-3" style="flex-grow:1;">
+                    {{ request["description"][:120] }}{% if request["description"]|length > 120 %}...{% endif %}
+                </p>
+
+                <p class="mb-3">
+                    <strong>{{ "%.2f"|format(request["amount_needed"]) }} EGP</strong> needed
+                </p>
+
+                <a href="{{ url_for('requests.request_details', request_id=request['id']) }}" class="btn btn-outline-hh mt-auto">
+                    View Details
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-12">
+            <div class="hh-empty hh-card">
+                <p class="mb-0">No help requests match your search yet.</p>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
