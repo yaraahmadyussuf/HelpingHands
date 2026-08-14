@@ -38,6 +38,7 @@ def tables_db():
         amount_needed REAL CHECK (amount_needed > 0) NOT NULL,
         status TEXT CHECK (status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        image_url TEXT,
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     );
     """
@@ -49,6 +50,7 @@ def tables_db():
         request_id INTEGER NOT NULL,
         donor_id INTEGER NOT NULL,
         message TEXT,
+        amount REAL CHECK (amount > 0),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (request_id) REFERENCES requests (id) ON DELETE CASCADE,
         FOREIGN KEY (donor_id) REFERENCES users (id) ON DELETE CASCADE
@@ -59,6 +61,9 @@ def tables_db():
     #save and close
     conn.commit()
     conn.close()
+
+tables_db()
+
 
 def current_time():
     return time.strftime("%Y-%m-%d %H:%M:%S")
@@ -147,7 +152,7 @@ def get_all_users():
         conn.close()
 
 #request functions
-def create_request(user_id: int, title: str, description: str , amount_needed: float, category: str = "general"):
+def create_request(user_id: int, title: str, description: str , amount_needed: float, category: str = "genaral", image_url: str = None):
     #connect with databse + access by cursor
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -155,10 +160,10 @@ def create_request(user_id: int, title: str, description: str , amount_needed: f
     #try..finally --> to make sure that in all cases the database will close --> keep it safe + easier to debugg the code
     try :
         created_at = current_time()
-        query = "INSERT INTO requests (user_id, title, description, category, amount_needed, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        query = "INSERT INTO requests (user_id, title, description, category, amount_needed, status, created_at, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
 
         #insert data to database
-        cursor.execute(query, (user_id, title, description, category, amount_needed, "pending", created_at))
+        cursor.execute(query, (user_id, title, description, category, amount_needed, "pending", created_at, image_url))
         conn.commit()
         request_id  =cursor.lastrowid
         return request_id
@@ -282,49 +287,71 @@ def search_requests(keyword: str, status: str | None = "approved"):
 
 
 
-#################### helper code need to understand ####################
+# REQUESTS FUNCTIONS
 
-def update_request(request_id: int, user_id: int, **fields: Any):
+
+def update_request(request_id: int, user_id: int, admin_override: bool = False, **fields: Any) -> bool:
+    """
+    Updates specific fields of an existing request.
+    
+    Logic:
+    - Verifies request existence and ensures caller is the owner (or an admin with admin_override=True).
+    - Filters incoming fields against 'allowed_fields' to prevent unauthorized updates.
+    - Dynamically generates the SQL SET clause based on provided arguments.
+    
+    SQL Query:
+    - query = f"UPDATE requests SET {set_clause} WHERE id = ?"
+    - Uses parameterized placeholders (?) to prevent SQL Injection.
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
     allowed_fields = ["title", "description", "category", "amount_needed"]
 
     try:
         request = get_request_by_id(request_id) 
-        if not request or request["user_id"] != user_id:
+        if not request or (request["user_id"] != user_id and not admin_override):
             return False
 
         updates: dict[str, Any] = {}
         for key, value in fields.items():
             if key in allowed_fields:
                 updates[key] = value
+        
         if not updates:
             return False
+            
         if "amount_needed" in updates and updates["amount_needed"] <= 0:
             return False
 
-        #ADVANCED#
         set_clause = ", ".join([f"{key} = ?" for key in updates.keys()])
         values = list(updates.values())
         values.append(request_id)
 
         query = f"UPDATE requests SET {set_clause} WHERE id = ?"
-        #####
         cursor.execute(query, values)
         conn.commit()
         return True
     finally:
         conn.close()
 
-###################################################################################
 
-def delete_request(request_id: int, user_id: int):
+def delete_request(request_id: int, user_id: int, admin_override: bool = False) -> bool:
+    """
+    Deletes a specific request from the database.
+    
+    Logic:
+    - Verifies request existence and checks owner permission or admin override.
+    - Permanently removes the record from the 'requests' table.
+    
+    SQL Query:
+    - "DELETE FROM requests WHERE id = ?"
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
         request = get_request_by_id(request_id) 
-        if not request or request["user_id"] != user_id:
+        if not request or (request["user_id"] != user_id and not admin_override):
             return False
         
         cursor.execute("DELETE FROM requests WHERE id = ?", (request_id,))
@@ -334,13 +361,22 @@ def delete_request(request_id: int, user_id: int):
         conn.close()
 
 
-def update_request_status(request_id: int, status: str):
+def update_request_status(request_id: int, status: str) -> bool:
+    """
+    Updates the status of a request (Admin feature: Approve/Reject).
+    
+    Logic:
+    - Validates that the status string belongs to allowed statuses ('pending', 'approved', 'rejected').
+    
+    SQL Query:
+    - "UPDATE requests SET status = ? WHERE id = ?"
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
     allowed_status = ["pending", "approved", "rejected"]
 
     try:
-        if get_request_by_id(request_id) and status in allowed_status :
+        if get_request_by_id(request_id) and status in allowed_status:
             cursor.execute("UPDATE requests SET status = ? WHERE id = ?", (status, request_id))
             conn.commit()
             return True
@@ -349,20 +385,42 @@ def update_request_status(request_id: int, status: str):
     finally:
         conn.close()
 
-#support functions
-def has_donor_supported(request_id: int, donor_id: int):
+
+
+# SUPPORT FUNCTIONS
+
+
+def has_donor_supported(request_id: int, donor_id: int) -> bool:
+    """
+    Checks if a donor has already pledged support for a specific request.
+    
+    Logic:
+    - Prevents duplicate supports/pledges from the same donor for the same request.
+    
+    SQL Query:
+    - "SELECT 1 FROM supports WHERE request_id = ? AND donor_id = ?"
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
         cursor.execute("SELECT 1 FROM supports WHERE request_id = ? AND donor_id = ?", (request_id, donor_id))
-        support=cursor.fetchone()
+        support = cursor.fetchone()
         return support is not None
     finally:
         conn.close()
 
 
-def create_support(request_id: int, donor_id: int, message: str):
+def create_support(request_id: int, donor_id: int, message: str ,amount: float | None = None):
+    """
+    Records a new support/pledge entry for a request.
+    
+    Logic:
+    - Checks for prior support first, inserts the pledge with current timestamp, and returns the generated ID.
+    
+    SQL Query:
+    - "INSERT INTO supports (request_id, donor_id, message, amount, created_at) VALUES (?, ?, ?, ?, ?)"
+    """
     if has_donor_supported(request_id, donor_id):
         return None
     
@@ -371,20 +429,31 @@ def create_support(request_id: int, donor_id: int, message: str):
     created_at = current_time()
 
     try:
-        query = "INSERT INTO supports (request_id, donor_id, message, created_at) VALUES (?, ?, ?, ?)"
-        cursor.execute(query, (request_id, donor_id, message, created_at))
-        support_id=cursor.lastrowid
+        query = "INSERT INTO supports (request_id, donor_id, message, amount, created_at) VALUES (?, ?, ?, ?, ?)"
+        cursor.execute(query, (request_id, donor_id, message, amount, created_at))
+        support_id = cursor.lastrowid
         conn.commit()
         return support_id
     finally:
         conn.close()
 
-def get_supports_for_request(request_id: int):
+
+def get_supports_for_request(request_id: int) -> list[dict]:
+    """
+    Retrieves all support records for a given request.
+    
+    Logic:
+    - Fetches support records joined with donor user info (name, email) for display on the request details page.
+    
+    SQL Query:
+    - JOIN users u ON s.donor_id = u.id (Links support table with user table to retrieve donor details).
+    - ORDER BY s.created_at DESC (Sorts pledges from newest to oldest).
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        query="""
+        query = """
         SELECT 
             s.id, s.request_id, s.donor_id, s.message, s.created_at,
             u.name AS donor_name, u.email AS donor_email
@@ -400,7 +469,16 @@ def get_supports_for_request(request_id: int):
         conn.close()
 
 
-def get_supports_by_donor(donor_id: int):
+def get_supports_by_donor(donor_id: int) -> list[dict]:
+    """
+    Retrieves all supports created by a specific donor.
+    
+    Logic:
+    - Fetches user pledges along with target request details for the donor dashboard/profile.
+    
+    SQL Query:
+    - JOIN requests r ON s.request_id = r.id (Links support table with requests table for titles and status).
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -420,8 +498,39 @@ def get_supports_by_donor(donor_id: int):
     finally:
         conn.close()
 
-#admin functions
-def get_admin_stats():
+
+def get_total_pledged(request_id: int) -> float:
+    """
+    Calculates the total amount pledged/supported for a specific request.
+    
+    Logic:
+    - Sums all pledges and handles NULL results using COALESCE to safely return 0.0 if no pledges exist.
+    
+    SQL Query:
+    - SELECT COALESCE(SUM(amount), 0) FROM supports WHERE request_id = ?
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT COALESCE(SUM(amount), 0) FROM supports WHERE request_id = ?", (request_id,))
+        result = cursor.fetchone()[0]
+        return float(result)
+    finally:
+        conn.close()
+
+
+# ADMIN FUNCTIONS
+
+def get_admin_stats() -> dict[str, int]:
+    """
+    Calculates system metrics for the admin dashboard.
+    
+    Logic:
+    - Returns counts of users, total requests, and request breakdowns by status.
+    
+    SQL Query:
+    - Uses aggregate COUNT(*) queries across users and requests tables.
+    """
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -430,7 +539,6 @@ def get_admin_stats():
         pending_requests = cursor.execute("SELECT COUNT(*) FROM requests WHERE status = 'pending'").fetchone()[0]
         approved_requests = cursor.execute("SELECT COUNT(*) FROM requests WHERE status = 'approved'").fetchone()[0]
         rejected_requests = cursor.execute("SELECT COUNT(*) FROM requests WHERE status = 'rejected'").fetchone()[0]
-
 
         return {
             "total_users": total_users,
@@ -442,4 +550,72 @@ def get_admin_stats():
     finally:
         conn.close()
 
+
 #get_all_users() & update_request_status() --> also for admin
+
+
+
+#HELPING FUNCTION TO TEST THE HOLE DATABASE --> PROVIDED FAKE USERS FOR TESTING
+# ONLY ME # -- > python -c "import database; database.seed_demo_data()"
+# python -c "import database; print('Users:', len(database.get_all_users())); print('Requests:', len(database.get_all_requests(status='all')))"
+def seed_demo_data():
+    """
+    Populates the database with realistic demo data for presentation purposes.
+    Cleans up existing data first and inserts users, requests, and supports.
+    """
+    tables_db()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("DELETE FROM supports")
+        cursor.execute("DELETE FROM requests")
+        cursor.execute("DELETE FROM users")
+
+        demo_password_hash = "password123"
+
+        cursor.execute(
+            "INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)",
+            ("Sarah Ahmed", "sarah@example.com", demo_password_hash, "01011111111", "requester")
+        )
+        requester_id = cursor.lastrowid
+
+        cursor.execute(
+            "INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)",
+            ("Omar Hassan", "omar@example.com", demo_password_hash, "01022222222", "donor")
+        )
+        donor_id = cursor.lastrowid
+
+        cursor.execute(
+            "INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)",
+            ("Admin User", "admin@example.com", demo_password_hash, "01033333333", "admin")
+        )
+
+        now = current_time()
+
+        cursor.execute(
+            """INSERT INTO requests (user_id, title, description, amount_needed, category, status, created_at, image_url)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (requester_id, "Need help with semester tuition TEST", "Urgent support needed for upcoming college fees.", 2500, "education", "pending", now, None)
+        )
+
+        cursor.execute(
+            """INSERT INTO requests (user_id, title, description, amount_needed, category, status, created_at, image_url)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (requester_id, "Monthly grocery support TEST", "Assistance needed for basic monthly groceries.", 800, "general", "approved", now, "/static/uploads/grocery_demo.jpg")
+        )
+        approved_request_id = cursor.lastrowid
+
+        cursor.execute(
+            """INSERT INTO supports (request_id, donor_id, message, amount, created_at)
+               VALUES (?, ?, ?, ?, ?)""",
+            (approved_request_id, donor_id, "I would love to help cover part of this!", 300.0, now)
+        )
+
+        conn.commit()
+        print("Demo data seeded successfully!")
+    finally:
+        conn.close()
+
+
+
