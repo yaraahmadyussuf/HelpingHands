@@ -1,5 +1,3 @@
-from __future__ import annotations  # lets "str | None" type hints work on Python < 3.10
-
 import sqlite3 as db
 import time
 from typing import Any
@@ -96,19 +94,19 @@ def create_user(name: str, email: str, password_hash: str, phone: str, role: str
 
     conn = get_db_connection()
     cursor = conn.cursor()
+    try:
+        # Parameterized query to prevent SQL injection and map parameters to placeholders
+        query = "INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)"
 
-    # Parameterized query to prevent SQL injection and map parameters to placeholders
-    query = "INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)"
+        #insert data to database
+        cursor.execute(query, (name, email, password_hash, phone, role))
+        conn.commit()
 
-    #insert data to database
-    cursor.execute(query, (name, email, password_hash, phone, role))
-    conn.commit()
-
-    # Retrieve the auto-incremented PRIMARY KEY of the newly inserted row
-    user_id = cursor.lastrowid
-
-    conn.close()
-    return user_id
+        # Retrieve the auto-incremented PRIMARY KEY of the newly inserted row
+        user_id = cursor.lastrowid
+        return user_id
+    finally:
+        conn.close()
 
 
 def get_user_by_email(email: str):
@@ -154,7 +152,10 @@ def get_all_users():
         conn.close()
 
 #request functions
-def create_request(user_id: int, title: str, description: str , amount_needed: float, category: str = "genaral", image_url: str = None):
+def create_request(user_id: int, title: str, description: str , amount_needed: float, category: str = "general", image_url: str = None):
+    if amount_needed is None or amount_needed <= 0:
+        return None
+    
     #connect with databse + access by cursor
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -307,7 +308,7 @@ def update_request(request_id: int, user_id: int, admin_override: bool = False, 
     """
     conn = get_db_connection()
     cursor = conn.cursor()
-    allowed_fields = ["title", "description", "category", "amount_needed"]
+    allowed_fields = ["title", "description", "category", "amount_needed", "image_url"]
 
     try:
         request = get_request_by_id(request_id) 
@@ -426,6 +427,9 @@ def create_support(request_id: int, donor_id: int, message: str ,amount: float |
     if has_donor_supported(request_id, donor_id):
         return None
     
+    if amount is not None and amount <= 0:
+        return None
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     created_at = current_time()
@@ -457,7 +461,7 @@ def get_supports_for_request(request_id: int) -> list[dict]:
     try:
         query = """
         SELECT 
-            s.id, s.request_id, s.donor_id, s.message, s.created_at,
+            s.id, s.request_id, s.donor_id, s.message, s.amount, s.created_at,
             u.name AS donor_name, u.email AS donor_email
         FROM supports s
         JOIN users u ON s.donor_id = u.id
@@ -487,7 +491,7 @@ def get_supports_by_donor(donor_id: int) -> list[dict]:
     try:
         query = """
         SELECT 
-            s.id, s.request_id, s.donor_id, s.message, s.created_at,
+            s.id, s.request_id, s.donor_id, s.message, s.amount, s.created_at,
             r.title AS request_title, r.status AS request_status
         FROM supports s
         JOIN requests r ON s.request_id = r.id
@@ -554,70 +558,3 @@ def get_admin_stats() -> dict[str, int]:
 
 
 #get_all_users() & update_request_status() --> also for admin
-
-
-
-#HELPING FUNCTION TO TEST THE HOLE DATABASE --> PROVIDED FAKE USERS FOR TESTING
-# ONLY ME # -- > python -c "import database; database.seed_demo_data()"
-# python -c "import database; print('Users:', len(database.get_all_users())); print('Requests:', len(database.get_all_requests(status='all')))"
-def seed_demo_data():
-    """
-    Populates the database with realistic demo data for presentation purposes.
-    Cleans up existing data first and inserts users, requests, and supports.
-    """
-    tables_db()
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute("DELETE FROM supports")
-        cursor.execute("DELETE FROM requests")
-        cursor.execute("DELETE FROM users")
-
-        demo_password_hash = "password123"
-
-        cursor.execute(
-            "INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)",
-            ("Sarah Ahmed", "sarah@example.com", demo_password_hash, "01011111111", "requester")
-        )
-        requester_id = cursor.lastrowid
-
-        cursor.execute(
-            "INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)",
-            ("Omar Hassan", "omar@example.com", demo_password_hash, "01022222222", "donor")
-        )
-        donor_id = cursor.lastrowid
-
-        cursor.execute(
-            "INSERT INTO users (name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?)",
-            ("Admin User", "admin@example.com", demo_password_hash, "01033333333", "admin")
-        )
-
-        now = current_time()
-
-        cursor.execute(
-            """INSERT INTO requests (user_id, title, description, amount_needed, category, status, created_at, image_url)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-            (requester_id, "Need help with semester tuition TEST", "Urgent support needed for upcoming college fees.", 2500, "education", "pending", now, None)
-        )
-
-        cursor.execute(
-            """INSERT INTO requests (user_id, title, description, amount_needed, category, status, created_at, image_url)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-            (requester_id, "Monthly grocery support TEST", "Assistance needed for basic monthly groceries.", 800, "general", "approved", now, "/static/uploads/grocery_demo.jpg")
-        )
-        approved_request_id = cursor.lastrowid
-
-        cursor.execute(
-            """INSERT INTO supports (request_id, donor_id, message, amount, created_at)
-               VALUES (?, ?, ?, ?, ?)""",
-            (approved_request_id, donor_id, "I would love to help cover part of this!", 300.0, now)
-        )
-
-        conn.commit()
-        print("Demo data seeded successfully!")
-    finally:
-        conn.close()
-
-
-
