@@ -4,9 +4,9 @@
 # render_template takes the HTML file from the template folder and sends it
 # to the browser for the user to see
 
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, session
 # to have defined functions from both files                                                                #to avoid conflict
-from database import get_db_connection, get_request_by_id, update_request, delete_request, create_request as create_request_db, get_request_by_user_id, create_support, get_supports_for_request
+from database import get_db_connection, get_request_by_id, update_request, delete_request, create_request as create_request_db, get_request_by_user_id, create_support, get_supports_for_request, get_supports_by_donor
 from authentication import login_required, role_required
 
 
@@ -114,14 +114,11 @@ def list_requests():
         category=category
     )
 
-
-# CREATE A HELP REQUEST
-
-
 # Display the create request form and handle submitted request data.
 
-
 @requests_bp.route("/requests/create", methods=["GET", "POST"])
+@login_required
+@role_required("requester")
 def create_request():
 
     # If the user submitted the form, process the submitted data.
@@ -151,10 +148,8 @@ def create_request():
         if amount_needed <= 0:
             return "Amount needed must be greater than 0.", 400
 
-        # TEMPORARY:
-        # We will replace this with session["user_id"]
-        # when authentication is connected.
-        user_id = 1
+         # Get the ID of the logged-in requester
+        user_id = session["user_id"]
 
         # Save the request in the database.
         request_id = create_request_db(
@@ -204,6 +199,8 @@ def request_details(request_id):
     "/requests/<int:request_id>/support",
     methods=["POST"]
 )
+@login_required
+@role_required("donor")
 def support_request(request_id):
 
     # Check that the request exists.
@@ -212,10 +209,8 @@ def support_request(request_id):
     if request_data is None:
         return "Help request not found.", 404
 
-    # TEMPORARY:
-    # We will replace this with session["user_id"]
-    # when authentication is connected.
-    donor_id = 2
+     # Actual logged-in donor
+    donor_id = session["user_id"]
 
     # Get the optional message from the donor.
     message = request.form.get("message", "").strip()
@@ -239,14 +234,29 @@ def support_request(request_id):
         )
     )
 
+@requests_bp.route("/my-supports")
+@login_required
+@role_required("donor")
+def my_supports():
+
+    # Actual logged-in donor
+    donor_id = session["user_id"]
+
+    supported_requests = get_supports_by_donor(donor_id)
+
+    return render_template(
+        "requests/my_supports.html",
+        supported_requests=supported_requests
+    )
+
 # Display all help requests created by the current user.
+#user has to be logged in
 @requests_bp.route("/my-requests")
+@login_required
+@role_required("requester")
 def my_requests():
 
-    # TEMPORARY:
-    # We will replace this with session["user_id"]
-    # when authentication is connected.
-    user_id = 1
+    user_id= session["user_id"]
 
     # Get all requests created by this user.
     requests = get_request_by_user_id(user_id)
@@ -277,6 +287,14 @@ def edit_request(request_id):
     if request_data is None:
         return "Help request not found.", 404
 
+    # The actual logged-in user
+    user_id = session["user_id"]
+
+    # Make sure this requester owns this request
+    if request_data["user_id"] != user_id:
+        return "You are not allowed to edit this request.", 403
+
+
     # If the user submitted the edit form.
     if request.method == "POST":
 
@@ -289,12 +307,6 @@ def edit_request(request_id):
         # Make sure the amount is greater than zero.
         if float(amount_needed) <= 0:
             return "Amount needed must be greater than 0.", 400
-
-        # For now, use the request owner's ID.
-        # We will replace this with session["user_id"]
-        # when authentication is connected.
-
-        session["user_id"]
 
         # Update the request in the database.
         updated = update_request(
@@ -334,6 +346,8 @@ def edit_request(request_id):
     "/requests/<int:request_id>/delete",
     methods=["POST"]
 )
+@login_required
+@role_required("requester")
 def delete_request_route(request_id):
 
     # Get the request from the database.
@@ -343,10 +357,12 @@ def delete_request_route(request_id):
     if request_data is None:
         return "Help request not found.", 404
 
-    # For now, use the request owner's ID.
-    # We will replace this with session["user_id"]
-    # when authentication is connected.
-    user_id = request_data["user_id"]
+    # Get the actual logged-in user
+    user_id = session["user_id"]
+
+    # Check ownership
+    if request_data["user_id"] != user_id:
+        return "You are not allowed to delete this request.", 403
 
     # Delete the request from the database.
     deleted = delete_request(

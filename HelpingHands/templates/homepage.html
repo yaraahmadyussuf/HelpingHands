@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Helping Hands</title>
+</head>
+
+<body>
+
+    {% if user.get("user_id") %}
+
+        <h1>Welcome, {{ user["name"] }}!</h1>
+
+        <p>You are logged in as a {{ user["role"] }}.</p>
+
+        <a href="{{ url_for('auth.logout') }}">Logout</a>
+
+        {% if user["role"] == "admin" %}
+            <br><br>
+            <a href="{{ url_for('admin') }}">Admin Dashboard</a>
+        {% endif %}
+
+    {% else %}
+
+        <h1>Welcome to Helping Hands!</h1>
+
+        <p>Please log in or create an account.</p>
+
+        <a href="{{ url_for('login') }}">Login</a>
+
+        <br><br>
+
+        <a href="{{ url_for('register') }}">Register</a>
+
+    {% endif %}
+
+</body>
+</html>
