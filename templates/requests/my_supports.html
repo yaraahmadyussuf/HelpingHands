@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}My Supports — Helping Hands{% endblock %}
+
+{% block content %}
+
+<h1 class="hh-section-title h2 mb-1">My Supports</h1>
+<p class="text-muted mb-4">Requests you've offered to help with.</p>
+
+<div class="hh-card p-4">
+    {% for support in supported_requests %}
+        <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+                <div class="fw-semibold">
+                    <a href="{{ url_for('requests.request_details', request_id=support['request_id']) }}">
+                        {{ support["request_title"] }}
+                    </a>
+                </div>
+                {% if support["message"] %}
+                    <p class="text-muted small mb-1">"{{ support["message"] }}"</p>
+                {% endif %}
+                <div class="text-muted small">Offered on {{ support["created_at"] }}</div>
+            </div>
+            <span class="hh-badge hh-badge-{{ support['request_status'] }}">{{ support["request_status"] }}</span>
+        </div>
+    {% else %}
+        <p class="text-muted mb-0">You haven't offered to help with any requests yet.</p>
+    {% endfor %}
+</div>
+
+{% endblock %}
