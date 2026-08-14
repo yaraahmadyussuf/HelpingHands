@@ -23,9 +23,9 @@ def allowed_file(filename):
 
 # ==================== CATEGORIES (no categories table in the schema) ====================
 CATEGORIES = [
-    {"id": 1, "name": "medical", "display_name": "طبي", "description": "دعم طبي وصحي"},
-    {"id": 2, "name": "social", "display_name": "اجتماعي", "description": "رعاية اجتماعية"},
-    {"id": 3, "name": "education", "display_name": "تعليمي", "description": "منح وتعليم"},
+    {"id": 1, "name": "medical", "display_name": "Medical", "description": "Medical and health support"},
+    {"id": 2, "name": "social", "display_name": "Social", "description": "Social welfare and community support"},
+    {"id": 3, "name": "education", "display_name": "Education", "description": "Scholarships and educational support"},
 ]
 
 
