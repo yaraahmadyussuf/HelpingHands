@@ -135,7 +135,7 @@ def admin():
     pending_requests = [c for c in all_requests if c["status"] == "pending"]
 
     return render_template(
-        "admin_dashboard.html",
+        "admin/dashboard.html", 
         stats=stats,
         users=users,
         requests=all_requests,
