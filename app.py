@@ -14,7 +14,7 @@ app.register_blueprint (requests_bp)
 db.tables_db()
 
                 #====Routes====#
-# ==================== 1. AUTHENTICATION & PUBLIC (auth.xxx) ====================
+# ==================== 1. AUTHENTICATION ====================
 
 @app.route('/', endpoint='auth.home')
 @app.route('/home', endpoint='auth.home')
@@ -30,7 +30,7 @@ def about():
     return render_template("about.html")
 
 
-                        # (HTTP) 
+                       # (HTTP) 
 @app.route("/register", methods=["GET", "POST"], endpoint='auth.register')
 def register():
     if request.method == "POST":
@@ -135,7 +135,7 @@ def admin():
     pending_requests = [c for c in all_requests if c["status"] == "pending"]
 
     return render_template(
-        "dashboard.html",
+        "admin_dashboard.html",
         stats=stats,
         users=users,
         requests=all_requests,
