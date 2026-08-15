@@ -1,29 +1,15 @@
-import os   #==> -- to deal with file path (windows) -- >
-import sqlite3
-import time
 from flask import Flask, render_template, request, redirect, url_for, session, flash
+import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 import database as db
 from authentication import login_required, role_required 
-from requests import requests_bp  
+from requestss import requests_bp  
 
 # ==================== INIT ====================
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "HelpingHands_Secret_Key_Nti"  
-UPLOAD_FOLDER = 'static/images'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB Limit
-app.register_blueprint (requests_bp)
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
+app.register_blueprint (requests_bp)  
 # Initialize database tables
 db.tables_db()
 
