@@ -35,6 +35,13 @@ def list_requests():
     # Open a connection with the SQLite database.
     conn = get_db_connection()
 
+    # Donor should only see approved requests
+    if session.get("role")=="donor":
+        status_condition="status='approved'"
+    else:
+        # others see all requests
+        status_condition="1=1"
+
     # If the user entered a search AND selected a category,
     # apply both filters.
     if search and category != "all":
@@ -42,12 +49,14 @@ def list_requests():
         search_pattern = f"%{search}%"
 
         requests = conn.execute(
-            """
+            f"""
             SELECT * FROM requests
-            WHERE
-                (title LIKE ?
-                OR description LIKE ?
-                OR category LIKE ?)
+            WHERE {status_condition}
+                AND (
+                    title LIKE ?
+                    OR description LIKE ?
+                    OR category LIKE ?
+                    )
                 AND category = ?
             ORDER BY created_at DESC
             """,
@@ -65,11 +74,14 @@ def list_requests():
         search_pattern = f"%{search}%"
 
         requests = conn.execute(
-            """
+            f"""
             SELECT * FROM requests
-            WHERE title LIKE ?
-               OR description LIKE ?
-               OR category LIKE ?
+            WHERE {status_condition}
+                AND(
+                    title LIKE ?
+                    OR description LIKE ?
+                    OR category LIKE ?
+                    )
             ORDER BY created_at DESC
             """,
             (
@@ -83,9 +95,10 @@ def list_requests():
     elif category != "all":
 
         requests = conn.execute(
-            """
+            f"""
             SELECT * FROM requests
-            WHERE category = ?
+            WHERE {status_condition}
+                AND category = ?
             ORDER BY created_at DESC
             """,
             (category,)
@@ -96,8 +109,9 @@ def list_requests():
     else:
 
         requests = conn.execute(
-            """
+            f"""
             SELECT * FROM requests
+            WHERE {status_condition}
             ORDER BY created_at DESC
             """
         ).fetchall()
@@ -113,6 +127,7 @@ def list_requests():
         search=search,
         category=category
     )
+
 
 # Display the create request form and handle submitted request data.
 
@@ -184,6 +199,10 @@ def request_details(request_id):
     if request_data is None:
         return "Help request not found.", 404
 
+    # Donor should only be able to view approved requests
+    if session.get("role") == "donor" and request_data["status"] != "approved":
+        return "This request is not available.", 403
+
     # Get the donors who offered to help with this request.
     supporters = get_supports_for_request(request_id)
 
@@ -208,6 +227,10 @@ def support_request(request_id):
 
     if request_data is None:
         return "Help request not found.", 404
+
+    # Donors can only support approved requests
+    if request_data["status"] != "approved":
+        return "You can only support approved requests.", 403
 
      # Actual logged-in donor
     donor_id = session["user_id"]
